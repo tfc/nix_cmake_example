@@ -10,7 +10,7 @@ in pythonEnv.buildPythonApplication rec {
   version = "1.0";
 
   src = ./.;
-  buildInputs = with pythonEnv; [ flask psycopg2 ];
+  propagatedBuildInputs = with pythonEnv; [ flask psycopg2 ];
 
   # No tests in archive
   doCheck = false;

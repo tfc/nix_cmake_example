@@ -1,11 +1,15 @@
 from flask import Flask
+import os
 import psycopg2
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    with psycopg2.connect("host=127.0.0.1 dbname=testdb user=testuser password=testuser") as connection:
+    db_str = "host={} dbname={} user={} password={}".format(
+            os.environ["MDB_HOST"], os.environ["MDB_DB"],
+            os.environ["MDB_USER"], os.environ["MDB_PASS"])
+    with psycopg2.connect(db_str) as connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT content, date FROM testcounter ORDER BY id desc LIMIT %s", (10, ))
 

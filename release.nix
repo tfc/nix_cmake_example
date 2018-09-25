@@ -61,4 +61,10 @@ in rec {
 
   mdb-server-docker = makeDockerImage "mdb-server" "${mdbServerWithoutPython}/bin/messagedb-server";
   mdb-webservice-docker = makeDockerImage "mdb-webservice" "${mdb-webservice}/bin/webserver";
+
+  integration-test = import ./integration_test.nix {
+    inherit nixpkgs;
+    mdbServer = mdb-server;
+    mdbWebservice = mdb-webservice;
+  };
 }
