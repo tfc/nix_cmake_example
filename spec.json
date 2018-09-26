@@ -1,0 +1,16 @@
+{
+    "enabled": 1,
+    "hidden": false,
+    "description": "Nix example C++/Python postgres app",
+    "nixexprinput": "src",
+    "nixexprpath": "release.nix",
+    "checkinterval": 300,
+    "schedulingshares": 100,
+    "enableemail": false,
+    "emailoverride": "",
+    "keepnr": 3,
+    "inputs": {
+        "src": { "type": "git", "value": "git://github.com/tfc/nix_cmake_example.git", "emailresponsible": false },
+        "nixpkgs": { "type": "git", "value": "git://github.com/NixOS/nixpkgs.git release-18.03", "emailresponsible": false }
+    }
+}
