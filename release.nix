@@ -45,17 +45,21 @@ let
   };
   staticOpenssl = pkgs.openssl.override { static = true; };
 
-in rec {
-  mdb-server = serverFunction { inherit nixpkgs pkgs; };
-  mdb-server-static = (serverFunction {
+  staticServer = selectedStdenv: (serverFunction {
     inherit nixpkgs pkgs;
     static = true;
-    stdenv = staticStdenv;
+    stdenv = selectedStdenv;
     libpqxx = staticPqxx;
   }).overrideAttrs (o: {
     buildInputs = o.buildInputs ++ [staticPostgresql staticOpenssl pkgs.glibc.static];
   });
+
+in rec {
+  mdb-server = serverFunction { inherit nixpkgs pkgs; };
+  mdb-server-static = staticServer pkgs.stdenv;
+
   mdb-server-clang  = serverFunction { inherit nixpkgs pkgs; stdenv = pkgs.clangStdenv; };
+  mdb-server-clang-static = staticServer pkgs.clangStdenv;
 
   mdb-webservice = clientFunction { inherit nixpkgs pkgs; };
 
