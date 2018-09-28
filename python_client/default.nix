@@ -1,16 +1,11 @@
-{
-  nixpkgs ? <nixpkgs>,
-  pkgs ? import nixpkgs {}
-}:
+{ python36Packages }:
 
-let
-  pythonEnv = pkgs.python36Packages;
-in pythonEnv.buildPythonApplication rec {
+python36Packages.buildPythonApplication rec {
   pname = "mdb-webservice";
   version = "1.0";
 
   src = ./.;
-  propagatedBuildInputs = with pythonEnv; [ flask psycopg2 ];
+  propagatedBuildInputs = with python36Packages; [ flask psycopg2 ];
 
   # No tests in archive
   doCheck = false;

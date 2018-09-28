@@ -4,7 +4,7 @@
 }:
 let
   serverPackage = pkgs.callPackage ./server {};
-  clientFunction = import ./python_client;
+  clientPackage = pkgs.callPackage ./python_client {};
   makeDockerImage = name: entrypoint: pkgs.dockerTools.buildImage {
       name = name;
       tag = "latest";
@@ -59,7 +59,7 @@ in rec {
   mdb-server-clang  = serverPackage.override { stdenv = pkgs.clangStdenv; };
   mdb-server-clang-static = staticServer pkgs.clangStdenv;
 
-  mdb-webservice = clientFunction { inherit nixpkgs pkgs; };
+  mdb-webservice = clientPackage;
 
   mdb-server-docker = makeDockerImage "mdb-server" "${mdbServerWithoutPython}/bin/messagedb-server";
   mdb-webservice-docker = makeDockerImage "mdb-webservice" "${mdb-webservice}/bin/webserver";
