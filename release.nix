@@ -3,7 +3,7 @@
   pkgs ? import nixpkgs {}
 }:
 let
-  serverFunction = import ./server;
+  serverPackage = pkgs.callPackage ./server {};
   clientFunction = import ./python_client;
   makeDockerImage = name: entrypoint: pkgs.dockerTools.buildImage {
       name = name;
@@ -22,7 +22,7 @@ let
       libxml2 = pkgs.libxml2.override { pythonSupport = false; };
     };
   };
-  mdbServerWithoutPython = serverFunction { inherit nixpkgs pkgs; libpqxx = libpqxxWithoutPython; };
+  mdbServerWithoutPython = serverPackage.override { libpqxx = libpqxxWithoutPython; };
 
   staticPostgresql = pkgs.postgresql100.overrideAttrs (o: {
       # https://www.postgresql-archive.org/building-libpq-a-static-library-td5970933.html
@@ -39,26 +39,24 @@ let
       '';
     });
 
-  staticStdenv = pkgs.makeStaticLibraries pkgs.stdenv;
-  staticPqxx = (pkgs.libpqxx.overrideAttrs (o: { configureFlags = []; })).override {
-    stdenv = staticStdenv; postgresql = staticPostgresql;
+  staticPqxx = selectedStdenv: (pkgs.libpqxx.overrideAttrs (o: { configureFlags = []; })).override {
+    stdenv = pkgs.makeStaticLibraries selectedStdenv; postgresql = staticPostgresql;
   };
   staticOpenssl = pkgs.openssl.override { static = true; };
 
-  staticServer = selectedStdenv: (serverFunction {
-    inherit nixpkgs pkgs;
+  staticServer = selectedStdenv: (serverPackage.override {
     static = true;
-    stdenv = selectedStdenv;
-    libpqxx = staticPqxx;
+    stdenv = pkgs.makeStaticLibraries selectedStdenv;
+    libpqxx = staticPqxx selectedStdenv;
   }).overrideAttrs (o: {
     buildInputs = o.buildInputs ++ [staticPostgresql staticOpenssl pkgs.glibc.static];
   });
 
 in rec {
-  mdb-server = serverFunction { inherit nixpkgs pkgs; };
+  mdb-server = serverPackage;
   mdb-server-static = staticServer pkgs.stdenv;
 
-  mdb-server-clang  = serverFunction { inherit nixpkgs pkgs; stdenv = pkgs.clangStdenv; };
+  mdb-server-clang  = serverPackage.override { stdenv = pkgs.clangStdenv; };
   mdb-server-clang-static = staticServer pkgs.clangStdenv;
 
   mdb-webservice = clientFunction { inherit nixpkgs pkgs; };
