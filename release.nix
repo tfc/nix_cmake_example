@@ -54,7 +54,14 @@ let
 
 in rec {
   mdb-server = serverPackage;
+  mdb-server-boost163 = serverPackage.override { boost = pkgs.boost163; };
+  mdb-server-boost164 = serverPackage.override { boost = pkgs.boost164; };
+  mdb-server-boost165 = serverPackage.override { boost = pkgs.boost165; };
+
   mdb-server-static = staticServer pkgs.stdenv;
+  mdb-server-static-boost163 = (staticServer pkgs.stdenv).override { boost = pkgs.boost163; };
+  mdb-server-static-boost164 = (staticServer pkgs.stdenv).override { boost = pkgs.boost164; };
+  mdb-server-static-boost165 = (staticServer pkgs.stdenv).override { boost = pkgs.boost165; };
 
   mdb-server-clang  = serverPackage.override { stdenv = pkgs.clangStdenv; };
   mdb-server-clang-static = staticServer pkgs.clangStdenv;
