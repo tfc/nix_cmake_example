@@ -1,12 +1,10 @@
-{ python36Packages }:
+let
+  nixpkgs = import ../pinnedNixpkgs.nix;
+  pkgs = import nixpkgs {
+    config = {};
+    overlays = [
+      (import ./overlay.nix)
+    ];
+  };
 
-python36Packages.buildPythonApplication rec {
-  pname = "mdb-webservice";
-  version = "1.0";
-
-  src = ./.;
-  propagatedBuildInputs = with python36Packages; [ flask psycopg2 ];
-
-  # No tests in archive
-  doCheck = false;
-}
+in pkgs.mdb-webserver

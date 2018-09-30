@@ -1,10 +1,11 @@
 {
-  nixpkgs ? import ./pinnedNixpkgs.nix,
-  pkgs ? import nixpkgs {}
+  nixpkgs ? import ./pinnedNixpkgs.nix
 }:
 let
-  serverPackage = pkgs.callPackage ./server {};
-  clientPackage = pkgs.callPackage ./python_client {};
+  pkgs = import nixpkgs {
+    overlays = [ (import ./server/overlay.nix) (import ./python_client/overlay.nix) ];
+  };
+
   makeDockerImage = name: entrypoint: pkgs.dockerTools.buildImage {
       name = name;
       tag = "latest";
@@ -22,7 +23,7 @@ let
       libxml2 = pkgs.libxml2.override { pythonSupport = false; };
     };
   };
-  mdbServerWithoutPython = serverPackage.override { libpqxx = libpqxxWithoutPython; };
+  mdbServerWithoutPython = pkgs.mdb-server.override { libpqxx = libpqxxWithoutPython; };
 
   staticPostgresql = pkgs.postgresql100.overrideAttrs (o: {
       # https://www.postgresql-archive.org/building-libpq-a-static-library-td5970933.html
@@ -44,7 +45,7 @@ let
   };
   staticOpenssl = pkgs.openssl.override { static = true; };
 
-  staticServer = selectedStdenv: (serverPackage.override {
+  staticServer = selectedStdenv: (pkgs.mdb-server.override {
     static = true;
     stdenv = pkgs.makeStaticLibraries selectedStdenv;
     libpqxx = staticPqxx selectedStdenv;
@@ -55,29 +56,29 @@ let
   integrationTest = serverPkg: import ./integration_test.nix {
     inherit nixpkgs;
     mdbServer = serverPkg;
-    mdbWebservice = clientPackage;
+    mdbWebservice = pkgs.mdb-webserver;
   };
 
   integrationTests = pkgs.lib.mapAttrs'
     (k: v: pkgs.lib.nameValuePair ("integrationtest-" + k) (integrationTest v));
 
   serverBinaries = {
-    mdb-server = serverPackage;
-    mdb-server-boost163 = serverPackage.override { boost = pkgs.boost163; };
-    mdb-server-boost164 = serverPackage.override { boost = pkgs.boost164; };
-    mdb-server-boost165 = serverPackage.override { boost = pkgs.boost165; };
+    mdb-server = pkgs.mdb-server;
+    mdb-server-boost163 = pkgs.mdb-server.override { boost = pkgs.boost163; };
+    mdb-server-boost164 = pkgs.mdb-server.override { boost = pkgs.boost164; };
+    mdb-server-boost165 = pkgs.mdb-server.override { boost = pkgs.boost165; };
 
     mdb-server-static = staticServer pkgs.stdenv;
     mdb-server-static-boost163 = (staticServer pkgs.stdenv).override { boost = pkgs.boost163; };
     mdb-server-static-boost164 = (staticServer pkgs.stdenv).override { boost = pkgs.boost164; };
     mdb-server-static-boost165 = (staticServer pkgs.stdenv).override { boost = pkgs.boost165; };
 
-    mdb-server-clang  = serverPackage.override { stdenv = pkgs.clangStdenv; };
+    mdb-server-clang  = pkgs.mdb-server.override { stdenv = pkgs.clangStdenv; };
     mdb-server-clang-static = staticServer pkgs.clangStdenv;
   };
 
 in rec {
-  mdb-webservice = clientPackage;
+  mdb-webservice = pkgs.mdb-webserver;
 
   mdb-server-docker = makeDockerImage "mdb-server" "${mdbServerWithoutPython}/bin/messagedb-server";
   mdb-webservice-docker = makeDockerImage "mdb-webservice" "${mdb-webservice}/bin/webserver";
