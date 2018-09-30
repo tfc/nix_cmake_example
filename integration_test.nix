@@ -59,7 +59,8 @@ let
 
       $mdb->start();
       $mdb->waitForUnit("mdb-webservice.service");
-      $mdb->sleep(2);
+
+      $mdb->waitUntilSucceeds("${pkgs.curl}/bin/curl http://localhost:5000");
 
       $mdb->succeed(check_count("SELECT * FROM testcounter;", 0));
 
