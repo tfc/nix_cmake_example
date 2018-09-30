@@ -67,7 +67,14 @@ let
     ["boost163" "boost164" "boost165" "boost166"];
   stdenvChoice = [ { stdenv = pkgs.stdenv;      nameStr = "gcc";}
                    { stdenv = pkgs.clangStdenv; nameStr = "clang";} ];
-  cartesianProduct = f: map (a: map (b: map (c: f a b c) stdenvChoice) boostChoice) staticChoice;
+  cartesianProduct = f: builtins.concatLists (
+    map (a: builtins.concatLists (
+      map (b:
+        map (c:
+          f a b c
+        ) stdenvChoice
+      ) boostChoice)
+    ) staticChoice);
 
   serverFunction = static: boostSel: stdenvSel: let
     nameStr = "mdb-server-" + stdenvSel.nameStr + "-" + boostSel.nameStr + (if static then "-static" else "");
@@ -75,8 +82,7 @@ let
     package' = package.override { inherit static; inherit (stdenvSel) stdenv; inherit (boostSel) boost; };
     in pkgs.lib.nameValuePair nameStr package';
 
-  joinLists = builtins.foldl' (l: r: l ++ r) [];
-  serverBinaries = builtins.listToAttrs (joinLists (joinLists (cartesianProduct serverFunction)));
+  serverBinaries = builtins.listToAttrs (cartesianProduct serverFunction);
 
 in rec {
   mdb-webservice = pkgs.mdb-webserver;
