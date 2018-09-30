@@ -62,20 +62,21 @@ let
   integrationTests = pkgs.lib.mapAttrs'
     (k: v: pkgs.lib.nameValuePair ("integrationtest-" + k) (integrationTest v));
 
-  serverBinaries = {
-    mdb-server = pkgs.mdb-server;
-    mdb-server-boost163 = pkgs.mdb-server.override { boost = pkgs.boost163; };
-    mdb-server-boost164 = pkgs.mdb-server.override { boost = pkgs.boost164; };
-    mdb-server-boost165 = pkgs.mdb-server.override { boost = pkgs.boost165; };
+  staticChoice = [true false];
+  boostChoice = map (x: { boost = pkgs.${x}; nameStr = x; })
+    ["boost163" "boost164" "boost165" "boost166"];
+  stdenvChoice = [ { stdenv = pkgs.stdenv;      nameStr = "gcc";}
+                   { stdenv = pkgs.clangStdenv; nameStr = "clang";} ];
+  cartesianProduct = f: map (a: map (b: map (c: f a b c) stdenvChoice) boostChoice) staticChoice;
 
-    mdb-server-static = staticServer pkgs.stdenv;
-    mdb-server-static-boost163 = (staticServer pkgs.stdenv).override { boost = pkgs.boost163; };
-    mdb-server-static-boost164 = (staticServer pkgs.stdenv).override { boost = pkgs.boost164; };
-    mdb-server-static-boost165 = (staticServer pkgs.stdenv).override { boost = pkgs.boost165; };
+  serverFunction = static: boostSel: stdenvSel: let
+    nameStr = "mdb-server-" + stdenvSel.nameStr + "-" + boostSel.nameStr + (if static then "-static" else "");
+    package = if static then staticServer stdenvSel.stdenv else pkgs.mdb-server;
+    package' = package.override { inherit static; inherit (stdenvSel) stdenv; inherit (boostSel) boost; };
+    in pkgs.lib.nameValuePair nameStr package';
 
-    mdb-server-clang  = pkgs.mdb-server.override { stdenv = pkgs.clangStdenv; };
-    mdb-server-clang-static = staticServer pkgs.clangStdenv;
-  };
+  joinLists = builtins.foldl' (l: r: l ++ r) [];
+  serverBinaries = builtins.listToAttrs (joinLists (joinLists (cartesianProduct serverFunction)));
 
 in rec {
   mdb-webservice = pkgs.mdb-webserver;
