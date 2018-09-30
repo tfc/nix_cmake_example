@@ -3,8 +3,11 @@ stdenv.mkDerivation {
   name = "mdb-server";
   version = "1.0";
   src = ./.;
-  buildInputs = [ boost cmake libpqxx ];
+  nativeBuildInputs = [ cmake ];
+  buildInputs = [ boost libpqxx ];
   cmakeFlags = lib.optional static "-DBUILD_STATIC=1";
+
+  enableParralelBuilding = true;
 
   installPhase = ''
     mkdir -p $out/bin;
