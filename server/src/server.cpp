@@ -33,7 +33,6 @@ private:
   {
     const std::string message{read_buffer.data(), bytes_transferred};
     std::cout << "got message " << message << '\n';
-
     db_.post_message(message);
 
     boost::asio::async_write(socket_, boost::asio::buffer("ok"),
