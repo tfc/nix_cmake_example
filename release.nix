@@ -51,6 +51,7 @@ let
     libpqxx = staticPqxx selectedStdenv;
   }).overrideAttrs (o: {
     buildInputs = o.buildInputs ++ [staticPostgresql staticOpenssl pkgs.glibc.static];
+    doCheck = false;
   });
 
   integrationTest = serverPkg: import ./integration_test.nix {

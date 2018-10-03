@@ -8,11 +8,15 @@ stdenv.mkDerivation {
   buildInputs = [ boost libpqxx ];
   checkInputs = [ gtest ];
 
-  cmakeFlags = lib.optional static "-DBUILD_STATIC=1";
+  cmakeFlags = [
+    (lib.optional static "-DBUILD_STATIC=1")
+    (lib.optional (!static) "-DENABLE_TESTS=1")
+  ];
+  makeTarget = "mdb-server";
   enableParallelBuilding = true;
 
   doCheck = true;
-  checkPhase = "./test/tests";
+  checkTarget = "test";
 
   installPhase = ''
     mkdir -p $out/bin;
