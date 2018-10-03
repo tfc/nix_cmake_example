@@ -1,13 +1,18 @@
-{ stdenv, lib, libpqxx, boost, cmake, static ? false }:
+{ stdenv, lib, libpqxx, boost, cmake, gtest, static ? false }:
 stdenv.mkDerivation {
   name = "mdb-server";
   version = "1.0";
   src = ./.;
+
   nativeBuildInputs = [ cmake ];
   buildInputs = [ boost libpqxx ];
-  cmakeFlags = lib.optional static "-DBUILD_STATIC=1";
+  checkInputs = [ gtest ];
 
+  cmakeFlags = lib.optional static "-DBUILD_STATIC=1";
   enableParralelBuilding = true;
+
+  doCheck = true;
+  checkPhase = "make tests && ./test/tests";
 
   installPhase = ''
     mkdir -p $out/bin;

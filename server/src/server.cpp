@@ -1,4 +1,5 @@
 #include "db.hpp"
+#include "trim.hpp"
 
 #include <boost/asio.hpp>
 
@@ -31,7 +32,8 @@ public:
 private:
   void handle_read(const boost::system::error_code& /*error*/, size_t bytes_transferred)
   {
-    const std::string message{read_buffer.data(), bytes_transferred};
+    std::string message{read_buffer.data(), bytes_transferred};
+    trim(message);
     std::cout << "got message " << message << '\n';
     db_.post_message(message);
 

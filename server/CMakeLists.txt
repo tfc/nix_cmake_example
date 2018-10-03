@@ -14,5 +14,5 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 add_compile_options(-Wall -Wextra -pedantic -Werror)
 
-
 add_subdirectory(src)
+add_subdirectory(test)
