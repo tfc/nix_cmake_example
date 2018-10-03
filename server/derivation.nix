@@ -12,7 +12,7 @@ stdenv.mkDerivation {
   enableParralelBuilding = true;
 
   doCheck = true;
-  checkPhase = "make tests && ./test/tests";
+  checkPhase = "./test/tests";
 
   installPhase = ''
     mkdir -p $out/bin;
