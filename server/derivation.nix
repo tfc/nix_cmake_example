@@ -9,7 +9,7 @@ stdenv.mkDerivation {
   checkInputs = [ gtest ];
 
   cmakeFlags = lib.optional static "-DBUILD_STATIC=1";
-  enableParralelBuilding = true;
+  enableParallelBuilding = true;
 
   doCheck = true;
   checkPhase = "./test/tests";
