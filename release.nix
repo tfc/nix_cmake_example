@@ -69,7 +69,7 @@ let
 
   staticChoice = [true false];
   boostChoice = map (x: { boost = pkgs.${x}; nameStr = x; })
-    ["boost163" "boost164" "boost165" "boost166" "boost167"];
+    ["boost163" "boost164" "boost165" "boost166" "boost167" "boost168"];
   stdenvChoice = [ { stdenv = pkgs.stdenv;      nameStr = "gcc7"; }
                    { stdenv = gcc8stdenv;       nameStr = "gcc8"; }
                    { stdenv = pkgs.clangStdenv; nameStr = "clang5"; }
