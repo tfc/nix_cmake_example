@@ -63,11 +63,19 @@ let
   integrationTests = pkgs.lib.mapAttrs'
     (k: v: pkgs.lib.nameValuePair ("integrationtest-" + k) (integrationTest v));
 
+  gcc8stdenv = pkgs.overrideCC pkgs.stdenv pkgs.gcc8;
+  clang6Stdenv = pkgs.overrideCC pkgs.clangStdenv pkgs.clang_6;
+  clang7Stdenv = pkgs.overrideCC pkgs.clangStdenv pkgs.clang_7;
+
   staticChoice = [true false];
   boostChoice = map (x: { boost = pkgs.${x}; nameStr = x; })
     ["boost163" "boost164" "boost165" "boost166"];
-  stdenvChoice = [ { stdenv = pkgs.stdenv;      nameStr = "gcc";}
-                   { stdenv = pkgs.clangStdenv; nameStr = "clang";} ];
+  stdenvChoice = [ { stdenv = pkgs.stdenv;      nameStr = "gcc7"; }
+                   { stdenv = gcc8stdenv;       nameStr = "gcc8"; }
+                   { stdenv = pkgs.clangStdenv; nameStr = "clang5"; }
+                   { stdenv = clang6Stdenv;     nameStr = "clang6"; }
+                   { stdenv = clang7Stdenv;     nameStr = "clang7"; }
+                 ];
   cartesianProduct = f: builtins.concatLists (
     map (a: builtins.concatLists (
       map (b:
