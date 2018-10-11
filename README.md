@@ -60,10 +60,13 @@ There is always the quick and unsafe `curl | sh` way to install, but there are a
 
 The server app can be compiled in different configurations:
 
-- Compiler
+- Compiler (can be easily extended/customized.)
    - GCC 7.3.0 (That is the default choice in the current package list. Can be easily parametrized, of course!)
-   - clang 5.0.2 (same thing regarding the version)
-- `boost` versions 1.6.3, 1.6.4, 1.6.5, 1.6.6
+   - GCC 8.2.0
+   - clang 5.0.2
+   - clang 6.0.1
+   - clang 7.0.0
+- `boost` versions 1.6.3, 1.6.4, 1.6.5, 1.6.6, 1.6.7, 1.6.8
 - Binary linkage
    - static (single-file with no further runtime dependencies)
    - dynamic
