@@ -76,9 +76,9 @@ let
                    { stdenv = clang6Stdenv;     nameStr = "clang6"; }
                    { stdenv = clang7Stdenv;     nameStr = "clang7"; }
                  ];
-  cartesianProduct = f: builtins.concatLists (
-    map (a: builtins.concatLists (
-      map (b:
+  cartesianProduct = f: (
+    pkgs.lib.concatMap (a: (
+      pkgs.lib.concatMap (b:
         map (c:
           f a b c
         ) stdenvChoice
