@@ -19,7 +19,9 @@ stdenv.mkDerivation {
   checkTarget = "test";
 
   installPhase = ''
-    mkdir -p $out/bin;
+    mkdir -p $out/bin $out/nix-support;
     cp src/messagedb-server $out/bin/;
+
+    echo "file binary-dist $out/bin/messagedb-server" >> $out/nix-support/hydra-build-products
   '';
 }
