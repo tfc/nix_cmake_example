@@ -76,22 +76,24 @@ let
                    { stdenv = clang6Stdenv;     nameStr = "clang6"; }
                    { stdenv = clang7Stdenv;     nameStr = "clang7"; }
                  ];
-  cartesianProduct = f: (
-    pkgs.lib.concatMap (a: (
-      pkgs.lib.concatMap (b:
-        map (c:
-          f a b c
-        ) stdenvChoice
-      ) boostChoice)
-    ) staticChoice);
 
-  serverFunction = static: boostSel: stdenvSel: let
-    nameStr = "mdb-server-" + stdenvSel.nameStr + "-" + boostSel.nameStr + (if static then "-static" else "");
-    package = if static then staticServer stdenvSel.stdenv else pkgs.mdb-server;
-    package' = package.override { inherit static; inherit (stdenvSel) stdenv; inherit (boostSel) boost; };
+  cartesianProduct =  f: a: b: c: let cm = pkgs.lib.concatMap; in
+    cm (z: cm (y: cm (x: [ (f x y z) ]) c) b) a;
+
+  serverFunction = static: boostSel: stdenvSel:
+    let
+      nameStr = "mdb-server-" + stdenvSel.nameStr + "-" + boostSel.nameStr
+              + (if static then "-static" else "");
+      package = if static then staticServer stdenvSel.stdenv
+                          else pkgs.mdb-server;
+      package' = package.override {
+        inherit static; inherit (stdenvSel) stdenv; inherit (boostSel) boost;
+      };
     in pkgs.lib.nameValuePair nameStr package';
 
-  serverBinaries = builtins.listToAttrs (cartesianProduct serverFunction);
+  serverBinaries = builtins.listToAttrs (
+    cartesianProduct serverFunction stdenvChoice boostChoice staticChoice
+  );
 
 in rec {
   mdb-webservice = pkgs.mdb-webserver;
