@@ -40,66 +40,68 @@ let
       '';
     });
 
-  staticPqxx = selectedStdenv: (pkgs.libpqxx.overrideAttrs (o: { configureFlags = []; })).override {
-    stdenv = pkgs.makeStaticLibraries selectedStdenv; postgresql = staticPostgresql;
+  staticPqxx = (pkgs.libpqxx.overrideAttrs (o: { configureFlags = []; })).override {
+    stdenv = pkgs.makeStaticLibraries pkgs.stdenv;
+    postgresql = staticPostgresql;
   };
   staticOpenssl = pkgs.openssl.override { static = true; };
 
-  staticServer = selectedStdenv: (pkgs.mdb-server.override {
+  staticServer = (pkgs.mdb-server.override {
     static = true;
-    stdenv = pkgs.makeStaticLibraries selectedStdenv;
-    libpqxx = staticPqxx selectedStdenv;
+    libpqxx = staticPqxx;
   }).overrideAttrs (o: {
     buildInputs = o.buildInputs ++ [staticPostgresql staticOpenssl pkgs.glibc.static];
     doCheck = false;
+    name = "${o.name}-static";
   });
 
-  integrationTest = serverPkg: import ./integration_test.nix {
-    inherit nixpkgs;
-    mdbServer = serverPkg;
+  originalDerivations = [
+    pkgs.mdb-server
+    staticServer
+  ];
+
+  compilers = with pkgs; {
+    gcc7 = stdenv;
+    gcc8 = overrideCC stdenv gcc8;
+    clang7 = overrideCC stdenv clang_7;
+    clang8 = overrideCC stdenv clang_8;
+  };
+
+  f = libname: libs: derivs: with pkgs.lib;
+    concatMap (deriv:
+      mapAttrsToList (libVers: lib:
+        (deriv.override { "${libname}" = lib; }).overrideAttrs
+          (old: { name = "${old.name}-${libVers}"; })
+      ) libs
+    ) derivs;
+
+  overrides = [
+    (f "stdenv" compilers)
+    (f "boost"  boostLibs)
+  ];
+
+  boostLibs = {
+    inherit (pkgs) boost166 boost167 boost168 boost169;
+  };
+
+  integrationTest = mdbServer: import ./integration_test.nix {
+    inherit nixpkgs mdbServer;
     mdbWebservice = pkgs.mdb-webserver;
   };
 
   integrationTests = pkgs.lib.mapAttrs'
-    (k: v: pkgs.lib.nameValuePair ("integrationtest-" + k) (integrationTest v));
+    (k: v: pkgs.lib.nameValuePair ("integrationtest-" + k) (integrationTest v {}));
 
-  gcc8stdenv = pkgs.overrideCC pkgs.stdenv pkgs.gcc8;
-  clang6Stdenv = pkgs.overrideCC pkgs.clangStdenv pkgs.clang_6;
-  clang7Stdenv = pkgs.overrideCC pkgs.clangStdenv pkgs.clang_7;
+  dockerImages = rec {
+    mdb-webservice = pkgs.mdb-webserver;
+    mdb-server-docker = makeDockerImage "mdb-server" "${mdbServerWithoutPython}/bin/messagedb-server";
+    mdb-webservice-docker = makeDockerImage "mdb-webservice" "${mdb-webservice}/bin/webserver";
+  };
 
-  staticChoice = [true false];
-  boostChoice = map (x: { boost = pkgs.${x}; nameStr = x; })
-    ["boost163" "boost164" "boost165" "boost166" "boost167" "boost168"];
-  stdenvChoice = [ { stdenv = pkgs.stdenv;      nameStr = "gcc7"; }
-                   { stdenv = gcc8stdenv;       nameStr = "gcc8"; }
-                   { stdenv = pkgs.clangStdenv; nameStr = "clang5"; }
-                   { stdenv = clang6Stdenv;     nameStr = "clang6"; }
-                   { stdenv = clang7Stdenv;     nameStr = "clang7"; }
-                 ];
-
-  cartesianProduct =  f: a: b: c: let cm = pkgs.lib.concatMap; in
-    cm (z: cm (y: cm (x: [ (f x y z) ]) c) b) a;
-
-  serverFunction = static: boostSel: stdenvSel:
-    let
-      nameStr = "mdb-server-" + stdenvSel.nameStr + "-" + boostSel.nameStr
-              + (if static then "-static" else "");
-      package = if static then staticServer stdenvSel.stdenv
-                          else pkgs.mdb-server;
-      package' = package.override {
-        inherit static; inherit (stdenvSel) stdenv; inherit (boostSel) boost;
-      };
-    in pkgs.lib.nameValuePair nameStr package';
-
-  serverBinaries = builtins.listToAttrs (
-    cartesianProduct serverFunction stdenvChoice boostChoice staticChoice
+  allDerivations = with pkgs.lib; foldl (a: b: a // { "${b.name}" = b; }) {} (
+    foldl (a: f: f a) originalDerivations overrides
   );
 
-in rec {
-  mdb-webservice = pkgs.mdb-webserver;
-
-  mdb-server-docker = makeDockerImage "mdb-server" "${mdbServerWithoutPython}/bin/messagedb-server";
-  mdb-webservice-docker = makeDockerImage "mdb-webservice" "${mdb-webservice}/bin/webserver";
-
-} // serverBinaries
-  // (integrationTests serverBinaries)
+in allDerivations //
+   (integrationTests allDerivations) //
+   dockerImages
