@@ -22,7 +22,7 @@ let
         services = {
           postgresql = {
             enable = true;
-            package = pkgs.postgresql100;
+            package = pkgs.postgresql_10;
             enableTCPIP = true;
             authentication = "host  all  all 0.0.0.0/0 md5";
             initialScript = pkgs.writeText "postgres-initScript" ''

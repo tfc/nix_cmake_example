@@ -25,7 +25,7 @@ let
   };
   mdbServerWithoutPython = pkgs.mdb-server.override { libpqxx = libpqxxWithoutPython; };
 
-  staticPostgresql = pkgs.postgresql100.overrideAttrs (o: {
+  staticPostgresql = pkgs.postgresql_10.overrideAttrs (o: {
       # https://www.postgresql-archive.org/building-libpq-a-static-library-td5970933.html
       postConfigure = o.postConfigure + ''
         echo -e 'libpq.a: $(OBJS)\n\tar rcs $@ $^'   >> ./src/interfaces/libpq/Makefile
