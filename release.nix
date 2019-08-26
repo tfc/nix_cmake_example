@@ -95,6 +95,7 @@ let
   dockerImages = rec {
     mdb-webservice = pkgs.mdb-webserver;
     mdb-server-docker = makeDockerImage "mdb-server" "${mdbServerWithoutPython}/bin/messagedb-server";
+    mdb-server-docker-static = makeDockerImage "mdb-server" "${staticServer}/bin/messagedb-server";
     mdb-webservice-docker = makeDockerImage "mdb-webservice" "${mdb-webservice}/bin/webserver";
   };
 
