@@ -52,25 +52,42 @@ let
     };
 
     testScript = ''
-      sub check_count {
-        my ($select, $nlines) = @_;
-        return 'test $(sudo -u postgres psql ${authEnv.MDB_DB} -tAc "' . $select . '"|wc -l) -eq ' . $nlines;
-      }
+      import shlex
 
-      $mdb->start();
-      $mdb->waitForUnit("mdb-webservice.service");
 
-      $mdb->waitUntilSucceeds("${pkgs.curl}/bin/curl http://localhost:5000");
+      def send_message(msg):
+          return mdb.succeed(
+              f"echo -n {msg} | ${pkgs.nmap}/bin/ncat localhost 1300"
+          )
 
-      $mdb->succeed(check_count("SELECT * FROM testcounter;", 0));
 
-      $mdb->succeed("echo -n hello | ${pkgs.nmap}/bin/ncat localhost 1300");
-      $mdb->succeed(check_count("SELECT * FROM testcounter;", 1));
-      $mdb->succeed("${pkgs.curl}/bin/curl http://localhost:5000") =~ /hello/ or die;;
+      def check_count(select, nlines):
+          output = mdb.succeed(f'su -c "psql -d ${authEnv.MDB_DB} -tAc \\"{select}\\"" postgres')
+          print(output)
+          return nlines == len(output.splitlines())
 
-      $mdb->succeed("echo -n foobar | ${pkgs.nmap}/bin/ncat localhost 1300");
-      $mdb->succeed(check_count("SELECT * FROM testcounter;", 2));
-      $mdb->succeed(check_count("SELECT * FROM testcounter WHERE content = 'foobar';", 1));
+
+      mdb.start()
+      mdb.wait_for_unit("mdb-webservice.service")
+      mdb.wait_for_unit("postgresql.service")
+
+      print(mdb.succeed("journalctl -u postgresql.service"))
+
+      mdb.wait_until_succeeds(
+          "${pkgs.curl}/bin/curl http://localhost:5000"
+      )
+
+      check_count("SELECT * FROM testcounter;", 0)
+
+      send_message("hello")
+      check_count("SELECT * FROM testcounter;", 1)
+      assert "hello" in mdb.succeed(
+          "${pkgs.curl}/bin/curl http://localhost:5000"
+      )
+
+      send_message("foobar")
+      check_count("SELECT * FROM testcounter;", 2)
+      check_count("SELECT * FROM testcounter WHERE content = 'foobar';", 1)
     '';
   });
-in import (nixpkgs + "/nixos/tests/make-test.nix") testFunction
+in import (nixpkgs + "/nixos/tests/make-test-python.nix") testFunction
