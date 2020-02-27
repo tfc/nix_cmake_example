@@ -2,8 +2,23 @@
   nixpkgs ? import ./pinnedNixpkgs.nix
 }:
 let
+  libpqxxOverlay = self: super: {
+    libpqxx = super.libpqxx.overrideAttrs (old: {
+      src = super.fetchFromGitHub {
+        owner = "jtv";
+        repo = "libpqxx";
+        rev = "922f43ec0e823599d52609b731b3546da63acafb";
+        sha256 = "0kr7mjyi82186xry8m1jg8p8l7n52p0r7887w2i2ykbsbfj13ad2";
+      };
+      nativeBuildInputs = [ super.gnused super.python3 ];
+    });
+  };
   pkgs = import nixpkgs {
-    overlays = [ (import ./server/overlay.nix) (import ./python_client/overlay.nix) ];
+    overlays = [
+      libpqxxOverlay
+      (import ./server/overlay.nix)
+      (import ./python_client/overlay.nix)
+    ];
   };
 
   makeDockerImage = name: entrypoint: pkgs.dockerTools.buildImage {
@@ -61,10 +76,10 @@ let
   ];
 
   compilers = with pkgs; {
-    gcc7 = stdenv;
-    gcc8 = overrideCC stdenv gcc8;
-    clang7 = overrideCC stdenv clang_7;
+    gcc9 = overrideCC stdenv gcc9;
     clang8 = overrideCC stdenv clang_8;
+    clang9 = overrideCC stdenv clang_9;
+    clang10 = overrideCC stdenv clang_10;
   };
 
   f = libname: libs: derivs: with pkgs.lib;

@@ -9,7 +9,7 @@ std::shared_ptr<pqxx::connection> connect_to_db(
     std::string hostname) {
   struct DbDeleter {
     void operator()(pqxx::connection* p) const {
-      p->disconnect();
+      p->close();
       delete p;
     }
   };
@@ -71,4 +71,3 @@ MessageDb::MessageDb(std::string db_name, std::string user, std::string password
 bool MessageDb::post_message(std::string message) {
   return insert_text_entry(*connection_, message);
 }
-
