@@ -1,11 +1,11 @@
-{ python36Packages }:
+{ buildPythonApplication, flask, psycopg2 }:
 
-python36Packages.buildPythonApplication rec {
+buildPythonApplication rec {
   pname = "mdb-webserver";
   version = "1.0";
 
   src = ./.;
-  propagatedBuildInputs = with python36Packages; [ flask psycopg2 ];
+  propagatedBuildInputs = [ flask psycopg2 ];
 
   # No tests in archive
   doCheck = false;

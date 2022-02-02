@@ -1,3 +1,3 @@
 self: super: {
-  mdb-webserver = self.callPackage ./derivation.nix {};
+  mdb-webserver = self.python3Packages.callPackage ./derivation.nix {};
 }

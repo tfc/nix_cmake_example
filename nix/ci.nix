@@ -1,1 +1,1 @@
-import ../release.nix {}
+import ../release.nix

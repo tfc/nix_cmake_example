@@ -1,11 +1,11 @@
-{ stdenv, lib, libpqxx, boost, cmake, gtest, static ? false }:
+{ stdenv, lib, libpqxx, boost16x, cmake, gtest, static ? false }:
 stdenv.mkDerivation {
   name = "mdb-server";
   version = "1.0";
   src = ./.;
 
   nativeBuildInputs = [ cmake ];
-  buildInputs = [ boost libpqxx ];
+  buildInputs = [ boost16x libpqxx ];
   checkInputs = [ gtest ];
 
   cmakeFlags = [

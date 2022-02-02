@@ -1,21 +1,17 @@
-{
-  nixpkgs ? import ./pinnedNixpkgs.nix
-}:
 let
+  sources = import ./nix/sources.nix {};
+  inherit (sources) nixpkgs;
+
   libpqxxOverlay = self: super: {
     libpqxx = super.libpqxx.overrideAttrs (old: {
-      src = super.fetchFromGitHub {
-        owner = "jtv";
-        repo = "libpqxx";
-        rev = "922f43ec0e823599d52609b731b3546da63acafb";
-        sha256 = "0kr7mjyi82186xry8m1jg8p8l7n52p0r7887w2i2ykbsbfj13ad2";
-      };
+      src = sources.libpqxx;
       nativeBuildInputs = [ super.gnused super.python3 ];
     });
   };
+
   pkgs = import nixpkgs {
     overlays = [
-      libpqxxOverlay
+      #libpqxxOverlay
       (import ./server/overlay.nix)
       (import ./python_client/overlay.nix)
     ];
@@ -40,7 +36,8 @@ let
   };
   mdbServerWithoutPython = pkgs.mdb-server.override { libpqxx = libpqxxWithoutPython; };
 
-  staticPostgresql = pkgs.postgresql_10.overrideAttrs (o: {
+  staticPostgresql = (pkgs.postgresql_11.overrideAttrs (o: {
+    dontDisableStatic = true;
       # https://www.postgresql-archive.org/building-libpq-a-static-library-td5970933.html
       postConfigure = o.postConfigure + ''
         echo -e 'libpq.a: $(OBJS)\n\tar rcs $@ $^'   >> ./src/interfaces/libpq/Makefile
@@ -53,7 +50,7 @@ let
         cp src/interfaces/libpq/libpq.a $out/lib/
         cp src/interfaces/libpq/libpq.a $lib/lib/
       '';
-    });
+    })).override { gssSupport = false; };
 
   staticPqxx = (pkgs.libpqxx.overrideAttrs (o: { configureFlags = []; })).override {
     stdenv = pkgs.makeStaticLibraries pkgs.stdenv;
@@ -65,7 +62,11 @@ let
     static = true;
     libpqxx = staticPqxx;
   }).overrideAttrs (o: {
-    buildInputs = o.buildInputs ++ [staticPostgresql staticOpenssl pkgs.glibc.static];
+    buildInputs = o.buildInputs ++ [
+      pkgs.glibc.static
+      staticOpenssl
+      staticPostgresql
+    ];
     doCheck = false;
     name = "${o.name}-static";
   });
@@ -92,11 +93,11 @@ let
 
   overrides = [
     (f "stdenv" compilers)
-    (f "boost"  boostLibs)
+    (f "boost16x"  boostLibs)
   ];
 
   boostLibs = {
-    inherit (pkgs) boost166 boost167 boost168 boost169;
+    inherit (pkgs) boost168 boost169; # boost >= 17x won't compile any longer
   };
 
   integrationTest = mdbServer: import ./integration_test.nix {

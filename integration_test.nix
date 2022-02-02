@@ -52,9 +52,6 @@ let
     };
 
     testScript = ''
-      import shlex
-
-
       def send_message(msg):
           return mdb.succeed(
               f"echo -n {msg} | ${pkgs.nmap}/bin/ncat localhost 1300"

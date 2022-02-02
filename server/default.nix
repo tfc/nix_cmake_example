@@ -1,6 +1,6 @@
 let
-  nixpkgs = import ../pinnedNixpkgs.nix;
-  pkgs = import nixpkgs {
+  sources = import ../nix/sources.nix {};
+  pkgs = import sources.nixpkgs {
     config = {};
     overlays = [
       (import ./overlay.nix)
