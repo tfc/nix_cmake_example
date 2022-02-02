@@ -1,3 +1,3 @@
 self: super: {
-  mdb-server = self.callPackage ./derivation.nix {};
+  mdb-server = self.callPackage ./derivation.nix { };
 }

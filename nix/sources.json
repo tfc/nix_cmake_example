@@ -1,16 +1,4 @@
 {
-    "libpqxx": {
-        "branch": "master",
-        "description": "The official C++ client API for PostgreSQL.",
-        "homepage": "http://pqxx.org/",
-        "owner": "jtv",
-        "repo": "libpqxx",
-        "rev": "ac1f7a9f91f3929b65a71dda129b29dc119d2139",
-        "sha256": "0rjgdlzwpfmyl91w02qdpmx0kqdxrngx8vd09j25n8vnq37pngzd",
-        "type": "tarball",
-        "url": "https://github.com/jtv/libpqxx/archive/ac1f7a9f91f3929b65a71dda129b29dc119d2139.tar.gz",
-        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
-    },
     "nixpkgs": {
         "branch": "nixos-21.11",
         "description": "Nix Packages collection",

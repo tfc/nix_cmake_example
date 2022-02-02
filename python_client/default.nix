@@ -1,10 +1,11 @@
 let
-  sources = import ../nix/sources.nix {};
+  sources = import ../nix/sources.nix { };
   pkgs = import sources.nixpkgs {
-    config = {};
+    config = { };
     overlays = [
       (import ./overlay.nix)
     ];
   };
 
-in pkgs.mdb-webserver
+in
+pkgs.mdb-webserver

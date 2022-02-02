@@ -1,13 +1,12 @@
-{
-  nixpkgs,
-  mdbServer,
-  mdbWebservice
+{ nixpkgs
+, mdbServer
+, mdbWebservice
 }:
 let
-  pkgs = import nixpkgs {};
+  pkgs = import nixpkgs { };
   authEnv = {
     MDB_HOST = "127.0.0.1";
-    MDB_DB   = "testdb";
+    MDB_DB = "testdb";
     MDB_USER = "testuser";
     MDB_PASS = "testpass";
   };
@@ -87,4 +86,5 @@ let
       check_count("SELECT * FROM testcounter WHERE content = 'foobar';", 1)
     '';
   });
-in import (nixpkgs + "/nixos/tests/make-test-python.nix") testFunction
+in
+import (nixpkgs + "/nixos/tests/make-test-python.nix") testFunction
