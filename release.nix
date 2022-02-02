@@ -95,7 +95,7 @@ let
   dockerImages =
     let
       makeDockerImage = name: entrypoint: pkgs.dockerTools.buildImage {
-        name = name;
+        inherit name;
         tag = "latest";
         contents = [ ];
         config = { Entrypoint = [ entrypoint ]; };

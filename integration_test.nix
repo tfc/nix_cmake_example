@@ -10,7 +10,7 @@ let
     MDB_PASS = "testpass";
   };
 
-  testFunction = ({ pkgs, ... }: {
+  testFunction = { pkgs, ... }: {
     name = "run-mdb-service-with-webservice";
 
     nodes = {
@@ -84,6 +84,6 @@ let
       check_count("SELECT * FROM testcounter;", 2)
       check_count("SELECT * FROM testcounter WHERE content = 'foobar';", 1)
     '';
-  });
+  };
 in
 import "${pkgs.path}/nixos/tests/make-test-python.nix" testFunction
