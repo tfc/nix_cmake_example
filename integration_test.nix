@@ -86,4 +86,4 @@ let
     '';
   };
 in
-import "${pkgs.path}/nixos/tests/make-test-python.nix" testFunction
+pkgs.nixosTest testFunction

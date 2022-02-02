@@ -91,7 +91,7 @@ let
     in
     pkgs.lib.mapAttrs'
       (k: v: pkgs.lib.nameValuePair "integrationtest-${k}"
-        (integrationTest v { }));
+        (integrationTest v));
 
   dockerImages =
     let
