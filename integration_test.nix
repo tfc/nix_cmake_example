@@ -1,9 +1,8 @@
-{ nixpkgs
+{ pkgs
 , mdbServer
 , mdbWebservice
 }:
 let
-  pkgs = import nixpkgs { };
   authEnv = {
     MDB_HOST = "127.0.0.1";
     MDB_DB = "testdb";
@@ -87,4 +86,4 @@ let
     '';
   });
 in
-import (nixpkgs + "/nixos/tests/make-test-python.nix") testFunction
+import "${pkgs.path}/nixos/tests/make-test-python.nix" testFunction

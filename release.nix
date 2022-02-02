@@ -1,8 +1,6 @@
 let
   sources = import ./nix/sources.nix { };
-  inherit (sources) nixpkgs;
-
-  pkgs = import nixpkgs {
+  pkgs = import sources.nixpkgs {
     overlays = [
       (import ./server/overlay.nix)
       (import ./python_client/overlay.nix)
@@ -86,7 +84,7 @@ let
   integrationTests =
     let
       integrationTest = mdbServer: import ./integration_test.nix {
-        inherit nixpkgs mdbServer;
+        inherit pkgs mdbServer;
         mdbWebservice = pkgs.mdb-webserver;
       };
     in
