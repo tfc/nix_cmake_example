@@ -8,7 +8,7 @@
     };
   };
 
-  outputs = { self, flake-parts, ... }:
+  outputs = { self, flake-parts, nixpkgs, ... }:
     flake-parts.lib.mkFlake { inherit self; } {
       systems = [ "x86_64-linux" ];
       imports = [
@@ -58,7 +58,7 @@
             let
               fromInputs = { stdenv, boost16x, static }:
                 let
-                  p = pkgs.python3Packages.callPackage ./server/derivation.nix { };
+                  p = pkgs.callPackage ./server/derivation.nix { };
                   noDots = lib.replaceChars [ "." ] [ "_" ];
                   staticStr = lib.optionalString static "-static";
                   name = "${p.name}-${noDots stdenv.cc.cc.name}-${noDots boost16x.name}${staticStr}";
@@ -87,6 +87,7 @@
         in
         {
           packages = serverVariants // {
+            mdb-server = pkgs.callPackage ./server/derivation.nix { };
             mdb-server-no-python =
               let # this is useful because libpqxx with python support depends on python2.7
                 # but we don't want python in its closure if we package it into a small
@@ -96,11 +97,25 @@
                     libxml2 = pkgs.libxml2.override { pythonSupport = false; };
                   };
                 };
-              in (pkgs.python3Packages.callPackage ./server/derivation.nix { }).override { libpqxx = libpqxxWithoutPython; };
+              in self'.packages.mdb-server.override { libpqxx = libpqxxWithoutPython; };
             mdb-webserver = pkgs.python3Packages.callPackage ./python_client/derivation.nix { };
           };
           checks = { } // (integrationTests serverVariants);
-
         };
+      flake = {
+        dockerImages =
+          let
+            makeDockerImage = name: entrypoint: nixpkgs.legacyPackages.x86_64-linux.dockerTools.buildImage {
+              inherit name;
+              tag = "latest";
+              config = { Entrypoint = [ entrypoint ]; };
+            };
+          in
+          {
+            mdb-webservice = makeDockerImage "mdb-webservice" "${self.packages.x86_64-linux.mdb-webserver}/bin/webserver";
+            mdb-server = makeDockerImage "mdb-server" "${self.packages.x86_64-linux.mdb-server-no-python}/bin/messagedb-server";
+            mdb-server-static = makeDockerImage "mdb-server" "${self.packages.x86_64-linux.mdb-server-gcc-9_5_0-boost-1_69_0-static}/bin/messagedb-server";
+          };
+      };
     };
 }
