@@ -86,9 +86,7 @@
             pkgs.lib.mapAttrs' (k: v: pkgs.lib.nameValuePair ("integrationtest-${k}") (integrationTest v));
         in
         {
-          packages = {
-            mdb-server = pkgs.python3Packages.callPackage ./server/derivation.nix { };
-            mdb-server-static = makeStatic self'.packages.mdb-server;
+          packages = serverVariants // {
             mdb-server-no-python =
               let # this is useful because libpqxx with python support depends on python2.7
                 # but we don't want python in its closure if we package it into a small
@@ -98,7 +96,7 @@
                     libxml2 = pkgs.libxml2.override { pythonSupport = false; };
                   };
                 };
-              in self'.packages.mdb-server.override { libpqxx = libpqxxWithoutPython; };
+              in (pkgs.python3Packages.callPackage ./server/derivation.nix { }).override { libpqxx = libpqxxWithoutPython; };
             mdb-webserver = pkgs.python3Packages.callPackage ./python_client/derivation.nix { };
           };
           checks = { } // (integrationTests serverVariants);
