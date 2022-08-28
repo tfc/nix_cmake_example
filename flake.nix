@@ -58,7 +58,7 @@
             let
               fromInputs = { stdenv, boost16x, static }:
                 let
-                  p = self'.packages.mdb-server;
+                  p = pkgs.python3Packages.callPackage ./server/derivation.nix { };
                   noDots = lib.replaceChars [ "." ] [ "_" ];
                   staticStr = lib.optionalString static "-static";
                   name = "${p.name}-${noDots stdenv.cc.cc.name}-${noDots boost16x.name}${staticStr}";
